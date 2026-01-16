@@ -182,7 +182,17 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # the momentum variable to update the running mean and running variance,    #
         # storing your result in the running_mean and running_var variables.        #
         #############################################################################
-        pass
+        sample_mean = np.mean(x, axis=0)  # shape(D,)
+        sample_var = np.var(x, axis=0)    # shape(D,)
+        x_normalized = (x - sample_mean) / np.sqrt(sample_var + eps)  # shape(N, D)
+        out = gamma * x_normalized +  beta  # shape(N, D
+
+        # Update running mean and variance
+        running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+        running_var = momentum * running_var + (1 - momentum) * sample_var
+
+        cache = (x, x_normalized, sample_mean, sample_var, gamma, beta, eps)
+
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -193,7 +203,9 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # and shift the normalized data using gamma and beta. Store the result in   #
         # the out variable.                                                         #
         #############################################################################
-        pass
+        x_normalized = (x - running_mean) / np.sqrt(running_var + eps)
+        out = gamma * x_normalized + beta
+        cache = (x, x_normalized, running_mean, running_var, gamma, beta, eps)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -229,7 +241,17 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the      #
     # results in the dx, dgamma, and dbeta variables.                           #
     #############################################################################
-    pass
+    x, x_normalized, sample_mean, sample_var, gamma, beta, eps = cache
+    N, D = x.shape
+    # Step-by-step backward pass
+    dbeta = np.sum(dout, axis=0)  # shape(D,)
+    dgamma = np.sum(dout * x_normalized, axis=0)  # shape(D,)
+    dx_normalized = dout * gamma  # shape(N, D)
+
+    dsample_var = np.sum(dx_normalized * (x - sample_mean) * -0.5 * (sample_var + eps) ** (-1.5), axis=0)  # shape(D,)
+    dsample_mean = np.sum(dx_normalized * -1 / np.sqrt(sample_var + eps), axis=0)  # shape(D,)
+    dx = dx_normalized / np.sqrt(sample_var + eps) + dsample_var * 2 * (x - sample_mean) / N + dsample_mean / N
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -259,7 +281,19 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a       #
     # single statement; our implementation fits on a single 80-character line.  #
     #############################################################################
-    pass
+    x, x_normalized, sample_mean, sample_var, gamma, beta, eps = cache
+    N, D = x.shape
+    dbeta = np.sum(dout, axis=0)  # shape(D,)
+    dgamma = np.sum(dout * x_normalized, axis=0)  # shape(D,)
+
+    # backprop through normalization
+    dx_normalized = dout * gamma  # shape(N, D)
+    # simplified gradient
+    sum_dx_norm = np.sum(dx_normalized, axis=0)
+
+    dx = (1. / N) * (sample_var + eps) ** (-0.5) * (N * dx_normalized - sum_dx_norm
+         - x_normalized * np.sum(dx_normalized * x_normalized, axis=0))
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
