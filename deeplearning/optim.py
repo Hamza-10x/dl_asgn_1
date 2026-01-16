@@ -66,7 +66,12 @@ def sgd_momentum(w, dw, config=None):
     # the updated value in the next_w variable. You should also use and update  #
     # the velocity v.                                                           # 
     #############################################################################
-    pass
+    mu = config['momentum']
+    learning_rate = config['learning_rate']
+    # v <- mu * v - lr * dw
+    v = mu * v - learning_rate * dw
+    # next parameter value
+    next_w = w + v
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -99,7 +104,16 @@ def rmsprop(x, dx, config=None):
     # in the next_x variable. Don't forget to update cache value stored in      #
     # config['cache'] and to use the epsilon scalar to avoid dividing by zero.  #
     #############################################################################
-    pass
+    decay_rate = config['decay_rate']
+    learning_rate = config['learning_rate']
+    epsilon = config['epsilon']
+    cache = config['cache']
+    # update cache with squared gradients
+    cache = decay_rate * cache + (1 - decay_rate) * (dx ** 2)
+    # update parameters
+    next_x = x - learning_rate * dx / (np.sqrt(cache) + epsilon)
+    # store updated cache back to config
+    config['cache'] = cache
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -136,7 +150,28 @@ def adam(x, dx, config=None):
     # the next_x variable. Don't forget to update the m, v, and t variables     #
     # stored in config and to use the epsilon scalar to avoid dividing by zero. #
     #############################################################################
-    pass
+    learning_rate = config['learning_rate']
+    beta1 = config['beta1']
+    beta2 = config['beta2']
+    epsilon = config['epsilon']
+    m = config['m']
+    v = config['v']
+    t = config['t'] + 1  # increment time step
+    # update biased first moment estimate
+    m = beta1 * m + (1 - beta1) * dx
+    # update biased second moment estimate
+    v = beta2 * v + (1 - beta2) * (dx ** 2)
+    # compute bias-corrected first moment estimate
+    m_hat = m / (1 - beta1 ** t)
+    # compute bias-corrected second moment estimate
+    v_hat = v / (1 - beta2 ** t)
+    # update parameters
+    next_x = x - learning_rate * m_hat / (np.sqrt(v_hat) + epsilon)
+    # store updated values back to config
+    config['m'] = m
+    config['v'] = v
+    config['t'] = t
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################

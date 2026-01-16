@@ -14,9 +14,10 @@ def fc_relu_forward(x, w, b):
     - out: Output from the ReLU
     - cache: Object to give to the backward pass
     """
-    a, fc_cache = fc_forward(x, w, b)
-    out, relu_cache = relu_forward(a)
-    cache = (fc_cache, relu_cache)
+
+    a, fc_cache = fc_forward(x, w, b) # a -> output of fc layer i.e out , cache -> (x, w, b)
+    out, relu_cache = relu_forward(a) # out -> output of relu layer i.e out, cache -> a
+    cache = (fc_cache, relu_cache) # cache -> ((x, w, b), a)
     return out, cache
 
 
@@ -24,9 +25,9 @@ def fc_relu_backward(dout, cache):
     """
     Backward pass for the fc-relu convenience layer
     """
-    fc_cache, relu_cache = cache
-    da = relu_backward(dout, relu_cache)
-    dx, dw, db = fc_backward(da, fc_cache)
+    fc_cache, relu_cache = cache # cache -> ((x, w, b), a)
+    da = relu_backward(dout, relu_cache) # da -> gradient of relu layer i.e dout
+    dx, dw, db = fc_backward(da, fc_cache) # dx, dw, db -> gradients of fc layer
     return dx, dw, db
 
 
